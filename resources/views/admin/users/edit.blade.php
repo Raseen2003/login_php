@@ -47,7 +47,7 @@
             @if($user->profile_pic && $user->profile_pic !== 'default-avatar.png')
               <div class="mb-2 d-flex align-items-center gap-3">
                 <img src="{{ asset('storage/' . $user->profile_pic) }}"
-                     class="rounded-circle border border-warning border-2"
+                     class="rounded-circle border-warning border-2"
                      style="width:70px;height:70px;object-fit:cover;">
                 <span class="text-muted small">Current photo — choose a new file to replace it</span>
               </div>
@@ -61,7 +61,7 @@
             {{-- Live preview --}}
             <div id="previewDiv" class="mt-2" style="display:none;">
               <img id="previewImg"
-                   class="rounded-circle border border-success border-2"
+                   class="rounded-circle border-success border-2"
                    style="width:70px;height:70px;object-fit:cover;">
               <span class="text-success small fw-bold ms-2">New photo selected ✓</span>
             </div>

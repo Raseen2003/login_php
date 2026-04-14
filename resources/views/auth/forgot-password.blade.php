@@ -14,11 +14,25 @@
         </div>
 
         @if(session('success'))
-          <div class="alert alert-success py-2 small">{{ session('success') }}</div>
+          <div class="alert alert-success py-2 small">
+            <i class="bi bi-check-circle me-1"></i>{{ session('success') }}
+          </div>
         @endif
+
         @if(session('error'))
-          <div class="alert alert-danger py-2 small">{{ session('error') }}</div>
+          <div class="alert alert-danger py-2 small">
+            <i class="bi bi-x-circle me-1"></i>{{ session('error') }}
+          </div>
         @endif
+
+        {{-- Shows reset link directly if email config fails (development only) --}}
+        @if(session('mail_error'))
+          <div class="alert alert-warning py-2 small">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            {!! session('mail_error') !!}
+          </div>
+        @endif
+
         @if($errors->any())
           <div class="alert alert-danger py-2 small">{{ $errors->first() }}</div>
         @endif

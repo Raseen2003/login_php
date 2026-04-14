@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
-    // Show login form
+    // Show login form — redirect away if already logged in
     public function showForm()
     {
-        if (session('user_id')) {
+        if (session()->has('user_id') && session('user_id')) {
             return session('user_role') === 'admin'
                 ? redirect()->route('admin.dashboard')
                 : redirect()->route('home');
@@ -23,7 +23,6 @@ class LoginController extends Controller
     // Handle login
     public function login(Request $request)
     {
-        // ✅ Validation
         $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required'],
@@ -36,32 +35,31 @@ class LoginController extends Controller
         $email    = strtolower(trim($request->email));
         $password = $request->password;
 
-        // ✅ Find user
         $user = User::where('email', $email)->first();
 
         if (!$user) {
             return back()->withErrors(['email' => 'Invalid email or password.'])->withInput();
         }
 
-        // ✅ Block soft-deleted users
+        //  Block soft-deleted users
         if ($user->is_deleted === true) {
             return back()->with('error', 'This account has been deactivated. Please contact admin.');
         }
 
-        // ✅ Check password
         if (!Hash::check($password, $user->password)) {
             return back()->withErrors(['email' => 'Invalid email or password.'])->withInput();
         }
 
-        // ✅ Store user info in session
+        //  Regenerate session to prevent session fixation attacks
+        $request->session()->regenerate();
+
         session([
-            'user_id'   => $user->id,
-            'user_name' => $user->name,
-            'user_role' => $user->role,
-            'user_email'=> $user->email,
+            'user_id'    => $user->id,
+            'user_name'  => $user->name,
+            'user_role'  => $user->role,
+            'user_email' => $user->email,
         ]);
 
-        // ✅ Redirect based on role
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
@@ -69,10 +67,15 @@ class LoginController extends Controller
         return redirect()->route('home');
     }
 
-    // Logout
+    // Logout — fully clear session
     public function logout(Request $request)
-    {
-        $request->session()->flush();
-        return redirect()->route('login')->with('success', 'Logged out successfully.');
-    }
+{
+    //  invalidate() completely destroys the session
+    // flush() only clears data but keeps the session alive
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login')
+           ->with('success', 'Logged out successfully.');
+}
 }

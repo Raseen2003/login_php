@@ -4,20 +4,17 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class CheckAuth
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
-    public function handle(Request $request, Closure $next)
+   public function handle(Request $request, Closure $next)
 {
-    if (!session('user_id')) {
-        return redirect()->route('login');
+    if (!session()->has('user_id') || !session('user_id')) {
+        session()->flush();
+        return redirect()->route('login')
+               ->with('error', 'Please log in to continue.');
     }
     return $next($request);
+    
 }
 }
