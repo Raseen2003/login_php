@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class ResetPasswordController extends Controller
 {
-    public function showForm($token)
+    public function showForm($token) 
     {
-        // Check token exists and not expired (1 hour)
-        $record = DB::table('password_reset_tokens')
+     
+        $record = DB::table('password_reset_tokens')  
                     ->where('token', $token)
                     ->first();
 
@@ -48,7 +48,7 @@ class ResetPasswordController extends Controller
             'password.regex'     => 'No spaces allowed in password.',
         ]);
 
-        // Verify token again
+      
         $record = DB::table('password_reset_tokens')
                     ->where('token', $token)
                     ->first();
@@ -58,7 +58,7 @@ class ResetPasswordController extends Controller
                    ->with('error', 'Invalid or expired reset link.');
         }
 
-        // Check expiry again
+   
         $createdAt = strtotime($record->created_at);
         if ((time() - $createdAt) > 3600) {
             DB::table('password_reset_tokens')->where('token', $token)->delete();
@@ -66,7 +66,7 @@ class ResetPasswordController extends Controller
                    ->with('error', 'This reset link has expired. Please request a new one.');
         }
 
-        // Find user and update password
+      
         $user = User::where('email', $record->email)->first();
         if (!$user) {
             return redirect()->route('login')->with('error', 'User not found.');
@@ -75,7 +75,7 @@ class ResetPasswordController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
 
-        // Delete used token
+     
         DB::table('password_reset_tokens')->where('token', $token)->delete();
 
         return redirect()->route('login')

@@ -14,5 +14,24 @@
 <body>
     @yield('content')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      
+        @if(session('logged_out'))
+            localStorage.setItem('techwyse_session_status', 'logged_out_' + Date.now());
+        @endif
+
+        window.addEventListener('storage', function (event) {
+            if (event.key === 'techwyse_session_status' && event.newValue.startsWith('logged_out_')) {
+                window.location.href = "{{ route('login') }}";
+            }
+        });  
+
+        @if(session('user_id'))
+            if(localStorage.getItem('techwyse_session_status')) {
+                localStorage.removeItem('techwyse_session_status');
+            }
+        @endif
+    </script>
 </body>
+
 </html>

@@ -43,7 +43,7 @@
             <label class="form-label fw-bold">Email Address</label>
             <input type="email" name="email"
                    class="form-control @error('email') is-invalid @enderror"
-                   placeholder="you@example.com"
+                   placeholder="Enter Your email"
                    value="{{ old('email') }}">
             @error('email')
               <div class="invalid-feedback">{{ $message }}</div>

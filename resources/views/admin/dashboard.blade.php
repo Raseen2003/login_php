@@ -3,7 +3,6 @@
 
 @section('content')
 
-{{-- Navbar --}}
 <nav class="navbar navbar-dark bg-dark shadow">
   <div class="container">
     <span class="navbar-brand fw-bold text-uppercase">
@@ -21,7 +20,6 @@
 
 <div class="container mt-5 pt-3">
 
-  {{-- Header row --}}
   <div class="row align-items-center mb-4">
     <div class="col-md-6">
       <h2 class="fw-bold">User Management</h2>
@@ -34,7 +32,6 @@
     </div>
   </div>
 
-  {{-- Stats cards --}}
   <div class="row mb-4 g-3">
     <div class="col-md-3">
       <div class="card border-0 shadow-sm bg-warning text-dark p-3">
@@ -50,7 +47,6 @@
     </div>
   </div>
 
-  {{-- Success / Error messages --}}
   @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show">
       {{ session('success') }}
@@ -64,32 +60,32 @@
     </div>
   @endif
 
-  {{-- Users table --}}
   <div class="card shadow-sm border-0">
     <div class="card-body p-0">
 
-      {{-- Search bar top-right --}}
+      {{--  Live search bar — filters as you type, no button needed --}}
       <div class="d-flex justify-content-end px-3 pt-3 pb-2">
-        <form method="GET" action="{{ route('admin.dashboard') }}" class="d-flex gap-2" style="max-width:280px;">
-          <div class="input-group input-group-sm">
-            <input type="text" name="search" class="form-control border-end-0"
-                   placeholder="Search name or email..."
-                   value="{{ $search }}">
-            <span class="input-group-text bg-white border-start-0">
-              <i class="bi bi-search text-muted"></i>
-            </span>
-          </div>
-          @if($search)
-            <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary">
-              <i class="bi bi-x"></i>
-            </a>
-          @endif
-        </form>
+        <div class="input-group input-group-sm" style="max-width:280px;">
+          <input type="text"
+                 id="liveSearch"
+                 class="form-control border-end-0"
+                 placeholder="Search name or email..."
+                 value="{{ $search }}"
+                 autocomplete="off">
+          <span class="input-group-text bg-white border-start-0">
+            <i class="bi bi-search text-muted"></i>
+          </span>
+          <button id="clearSearch"
+                  class="btn btn-sm btn-outline-secondary ms-1"
+                  style="display:{{ $search ? 'inline-block' : 'none' }};"
+                  onclick="clearSearchFn()">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
       </div>
 
-      {{-- Table --}}
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0" id="usersTable">
           <thead class="bg-light">
             <tr>
               <th class="ps-4 py-3 text-secondary small fw-semibold text-uppercase">Member</th>
@@ -99,15 +95,20 @@
               <th class="py-3 text-secondary small fw-semibold text-uppercase text-center">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="usersTableBody">
             @forelse($users as $user)
-              <tr>
+              <tr class="user-row"
+                  data-name="{{ strtolower($user->name) }}"
+                  data-email="{{ strtolower($user->email) }}">
                 <td class="ps-4 py-3">
                   <div class="d-flex align-items-center">
                     @if($user->profile_pic && $user->profile_pic !== 'default-avatar.png')
+                      {{--  Clickable profile pic opens lightbox --}}
                       <img src="{{ asset('storage/' . $user->profile_pic) }}"
                            class="rounded-circle me-3 border border-warning"
-                           style="width:40px;height:40px;object-fit:cover;">
+                           style="width:40px;height:40px;object-fit:cover;cursor:pointer;"
+                           onclick="openLightbox('{{ asset('storage/' . $user->profile_pic) }}', '{{ $user->name }}')"
+                           alt="{{ $user->name }}">
                     @else
                       <div class="rounded-circle bg-warning bg-opacity-10 text-dark d-flex align-items-center justify-content-center fw-bold me-3"
                            style="width:40px;height:40px;">
@@ -136,7 +137,6 @@
                        class="btn btn-outline-primary btn-sm rounded-2 px-3">
                       <i class="bi bi-pencil me-1"></i>Edit
                     </a>
-                    {{-- Soft Delete --}}
                     <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}"
                           onsubmit="return confirm('This user will be deactivated. Continue?')">
                       @csrf
@@ -151,19 +151,97 @@
               <tr>
                 <td colspan="5" class="text-center py-5 text-muted">
                   <i class="bi bi-inbox display-6 d-block mb-2"></i>
-                  @if($search)
-                    No users found for "<strong>{{ $search }}</strong>"
-                  @else
-                    No users found in the system.
-                  @endif
+                  No users found in the system.
                 </td>
               </tr>
             @endforelse
           </tbody>
         </table>
+
+        
+        <div id="noResults" class="text-center py-5 text-muted" style="display:none;">
+          <i class="bi bi-search display-6 d-block mb-2"></i>
+          <span>No users found matching your search.</span>
+        </div>
       </div>
 
     </div>
   </div>
 </div>
+
+{{--  LIGHTBOX OVERLAY — fullscreen image viewer --}}
+<div id="lightboxOverlay"
+     onclick="closeLightbox()"
+     style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+            background:rgba(0,0,0,0.80);z-index:9999;
+            align-items:center;justify-content:center;cursor:pointer;">
+  <div style="text-align:center;" onclick="event.stopPropagation()">
+    <img id="lightboxImg"
+         src=""
+         style="max-width:90vw;max-height:78vh;border-radius:14px;
+                box-shadow:0 8px 40px rgba(0,0,0,0.6);"
+         alt="Profile">
+    <div id="lightboxName"
+         style="color:#fff;margin-top:12px;font-weight:bold;font-size:18px;"></div>
+    <button onclick="closeLightbox()"
+            class="btn btn-light btn-sm mt-2 px-4 rounded-pill">
+      <i class="bi bi-x-lg me-1"></i>Close
+    </button>
+  </div>
+</div>
+
+<script>
+    
+  document.getElementById('liveSearch').addEventListener('input', function () {
+    const query = this.value.toLowerCase().trim();
+    const rows  = document.querySelectorAll('.user-row');
+    let visibleCount = 0;
+
+    rows.forEach(function (row) {
+      const name  = row.getAttribute('data-name');
+      const email = row.getAttribute('data-email');
+
+      if (name.includes(query) || email.includes(query)) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    // Show/hide clear button
+    document.getElementById('clearSearch').style.display = query ? 'inline-block' : 'none';
+
+    // Show "no results" message if nothing matches
+    document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+  });
+
+  //  Clear search
+  function clearSearchFn() {
+    document.getElementById('liveSearch').value = '';
+    document.querySelectorAll('.user-row').forEach(r => r.style.display = '');
+    document.getElementById('clearSearch').style.display = 'none';
+    document.getElementById('noResults').style.display = 'none';
+  }
+
+  //  LIGHTBOX — open full-size image
+  function openLightbox(src, name) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightboxName').textContent = name;
+    const overlay = document.getElementById('lightboxOverlay');
+    overlay.style.display = 'flex';
+  }
+
+  //  LIGHTBOX — close
+  function closeLightbox() {
+    document.getElementById('lightboxOverlay').style.display = 'none';
+    document.getElementById('lightboxImg').src = '';
+  }
+
+  // Close lightbox with Escape key
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+</script>
+
 @endsection

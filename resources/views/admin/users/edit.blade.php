@@ -3,8 +3,11 @@
 
 @section('content')
 <nav class="navbar navbar-dark bg-dark shadow">
+  
   <div class="container">
+
     <span class="navbar-brand fw-bold text-uppercase">
+
       <i class="bi bi-shield-lock-fill me-2"></i>TechWyse Admin Portal
     </span>
     <div class="d-flex align-items-center gap-3">
@@ -34,7 +37,6 @@
           <div class="alert alert-danger py-2 small">{{ $errors->first() }}</div>
         @endif
 
-        {{-- enctype required for file upload --}}
         <form method="POST" action="{{ route('admin.users.update', $user->id) }}"
               enctype="multipart/form-data">
           @csrf
@@ -43,11 +45,10 @@
           <div class="mb-3">
             <label class="form-label fw-bold">Profile Picture (JPG only)</label>
 
-            {{-- Show current picture --}}
             @if($user->profile_pic && $user->profile_pic !== 'default-avatar.png')
               <div class="mb-2 d-flex align-items-center gap-3">
                 <img src="{{ asset('storage/' . $user->profile_pic) }}"
-                     class="rounded-circle border-warning border-2"
+                     class="rounded-circle  border-warning border-2"
                      style="width:70px;height:70px;object-fit:cover;">
                 <span class="text-muted small">Current photo — choose a new file to replace it</span>
               </div>
@@ -58,10 +59,9 @@
                    onchange="previewImage(this)">
             <small class="text-muted">Leave empty to keep current picture. JPG only, max 5MB.</small>
 
-            {{-- Live preview --}}
             <div id="previewDiv" class="mt-2" style="display:none;">
               <img id="previewImg"
-                   class="rounded-circle border-success border-2"
+                   class="rounded-circle  border-success border-2"
                    style="width:70px;height:70px;object-fit:cover;">
               <span class="text-success small fw-bold ms-2">New photo selected ✓</span>
             </div>
@@ -80,7 +80,7 @@
             @enderror
           </div>
 
-          {{-- Email (read only) --}}
+          {{-- Email read only --}}
           <div class="mb-3">
             <label class="form-label fw-bold">Email Address</label>
             <input type="email" class="form-control bg-light"
@@ -101,15 +101,18 @@
             @enderror
           </div>
 
-          {{-- Password --}}
+          {{-- Password — space blocked --}}
           <div class="mb-3">
             <label class="form-label fw-bold">
-              Change Password <span class="text-muted fw-normal">(leave blank to keep current)</span>
+              Change Password
+              <span class="text-muted fw-normal">(leave blank to keep current)</span>
             </label>
             <div class="input-group">
               <input type="password" name="password" id="editPassword"
                      class="form-control @error('password') is-invalid @enderror"
-                     placeholder="Min 6 characters">
+                     placeholder="Min 6 characters"
+                     onkeydown="blockSpaces(event)"
+                     onpaste="blockPasteSpaces(event)">
               <button class="btn btn-outline-secondary" type="button"
                       onclick="togglePass('editPassword', this)">
                 <i class="bi bi-eye"></i>
@@ -156,6 +159,26 @@
 </div>
 
 <script>
+  //  Block spacebar on password fields
+  function blockSpaces(event) {
+    if (event.key === ' ' || event.code === 'Space') {
+      event.preventDefault();
+    }
+  }
+
+  //  Block pasting passwords that contain spaces
+  function blockPasteSpaces(event) {
+    const pasted = (event.clipboardData || window.clipboardData).getData('text');
+    if (pasted.includes(' ')) {
+      event.preventDefault();
+      const input = event.target;
+      const clean = pasted.replace(/\s/g, '');
+      const start = input.selectionStart;
+      const end   = input.selectionEnd;
+      input.value = input.value.substring(0, start) + clean + input.value.substring(end);
+    }
+  }
+
   function togglePass(id, btn) {
     const input = document.getElementById(id);
     const icon  = btn.querySelector('i');

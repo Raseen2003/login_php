@@ -20,12 +20,15 @@
         <form method="POST" action="/reset-password/{{ $token }}">
           @csrf
 
+          {{-- New Password — space blocked --}}
           <div class="mb-3">
             <label class="form-label fw-bold">New Password</label>
             <div class="input-group">
               <input type="password" name="password" id="newPassword"
                      class="form-control @error('password') is-invalid @enderror"
-                     placeholder="Min 6 characters">
+                     placeholder="Min 6 characters"
+                     onkeydown="blockSpaces(event)"
+                     onpaste="blockPasteSpaces(event)">
               <button class="btn btn-outline-secondary" type="button"
                       onclick="togglePass('newPassword', this)">
                 <i class="bi bi-eye"></i>
@@ -36,12 +39,15 @@
             </div>
           </div>
 
+          {{-- Confirm Password — space blocked --}}
           <div class="mb-4">
             <label class="form-label fw-bold">Confirm New Password</label>
             <div class="input-group">
               <input type="password" name="password_confirmation" id="confirmPassword"
                      class="form-control"
-                     placeholder="Repeat new password">
+                     placeholder="Repeat new password"
+                     onkeydown="blockSpaces(event)"
+                     onpaste="blockPasteSpaces(event)">
               <button class="btn btn-outline-secondary" type="button"
                       onclick="togglePass('confirmPassword', this)">
                 <i class="bi bi-eye"></i>
@@ -60,6 +66,24 @@
 </div>
 
 <script>
+  function blockSpaces(event) {
+    if (event.key === ' ' || event.code === 'Space') {
+      event.preventDefault();
+    }
+  }
+
+  function blockPasteSpaces(event) {
+    const pasted = (event.clipboardData || window.clipboardData).getData('text');
+    if (pasted.includes(' ')) {
+      event.preventDefault();
+      const input = event.target;
+      const clean = pasted.replace(/\s/g, '');
+      const start = input.selectionStart;
+      const end   = input.selectionEnd;
+      input.value = input.value.substring(0, start) + clean + input.value.substring(end);
+    }
+  }
+
   function togglePass(id, btn) {
     const input = document.getElementById(id);
     const icon  = btn.querySelector('i');

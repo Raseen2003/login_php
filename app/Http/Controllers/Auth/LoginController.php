@@ -16,7 +16,7 @@ class LoginController extends Controller
             return session('user_role') === 'admin'
                 ? redirect()->route('admin.dashboard')
                 : redirect()->route('home');
-        }
+        }                                   
         return view('auth.login');
     }
 
@@ -42,16 +42,20 @@ class LoginController extends Controller
         }
 
         //  Block soft-deleted users
-        if ($user->is_deleted === true) {
-            return back()->with('error', 'This account has been deactivated. Please contact admin.');
+        // if ($user->is_deleted === true) {
+        //     return back()->with('error', 'This account has been deactivated. Please contact admin.');
+        // }
+         if ($user->is_deleted === true) {
+            return redirect()->route('login')
+                ->with('error', 'This account has been deactivated. Please contact admin.');
         }
 
         if (!Hash::check($password, $user->password)) {
             return back()->withErrors(['email' => 'Invalid email or password.'])->withInput();
         }
 
-        //  Regenerate session to prevent session fixation attacks
-        $request->session()->regenerate();
+   
+        $request->session( )->regenerate();
 
         session([
             'user_id'    => $user->id,
@@ -67,15 +71,16 @@ class LoginController extends Controller
         return redirect()->route('home');
     }
 
-    // Logout — fully clear session
-    public function logout(Request $request)
+
+
+public function logout(Request $request)
 {
-    //  invalidate() completely destroys the session
-    // flush() only clears data but keeps the session alive
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 
+    // Use ->with('logged_out', true) so the view knows a logout just happened
     return redirect()->route('login')
-           ->with('success', 'Logged out successfully.');
+           ->with('success', 'Logged out successfully.')
+           ->with('logged_out', true); 
 }
 }

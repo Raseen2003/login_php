@@ -5,11 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class HomeController extends Controller
+class HomeController extends Controller 
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Get all non-deleted users for normal user view
         $users = User::where('is_deleted', '!=', true)
                      ->orderBy('created_at', 'desc')
                      ->get();

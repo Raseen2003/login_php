@@ -11,7 +11,7 @@ class RegisterController extends Controller
 {
     public function showForm()
     {
-        //  Already logged in — redirect away
+     
         if (session()->has('user_id') && session('user_id')) {
             return session('user_role') === 'admin'
                 ? redirect()->route('admin.dashboard')

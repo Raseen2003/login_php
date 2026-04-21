@@ -12,7 +12,7 @@ class DashboardController extends Controller
     {
         $search = $request->query('search', '');
 
-        // Get all non-deleted users, with optional search
+   
         $users = User::where('is_deleted', '!=', true)
                      ->when($search, function ($query) use ($search) {
                          $query->where(function ($q) use ($search) {

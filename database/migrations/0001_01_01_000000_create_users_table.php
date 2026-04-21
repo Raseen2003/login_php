@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // ✅ Users table with all custom fields
+        
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -25,14 +25,14 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // ✅ Keep Laravel default structure for password_reset_tokens
+     
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
-        // ✅ Sessions table
+     
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();

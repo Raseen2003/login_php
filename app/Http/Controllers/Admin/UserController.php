@@ -81,7 +81,6 @@ class UserController extends Controller
         $user->address = $request->address ?? '';
         $user->role    = $request->role;
 
-        // Update password only if provided
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }

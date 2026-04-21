@@ -42,7 +42,6 @@
         <form method="POST" action="{{ route('admin.users.store') }}">
           @csrf
 
-          {{-- Name --}}
           <div class="mb-3">
             <label class="form-label fw-bold">Full Name</label>
             <input type="text" name="name"
@@ -55,25 +54,26 @@
             @enderror
           </div>
 
-          {{-- Email --}}
           <div class="mb-3">
             <label class="form-label fw-bold">Email Address</label>
             <input type="email" name="email"
                    class="form-control @error('email') is-invalid @enderror"
-                   placeholder="user@example.com"
+                   placeholder="Enter email"
                    value="{{ old('email') }}">
             @error('email')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
           </div>
 
-          {{-- Password --}}
+          {{-- Password — space blocked --}}
           <div class="mb-3">
             <label class="form-label fw-bold">Password</label>
             <div class="input-group">
               <input type="password" name="password" id="createPassword"
                      class="form-control @error('password') is-invalid @enderror"
-                     placeholder="Min 6 characters">
+                     placeholder="Min 6 characters"
+                     onkeydown="blockSpaces(event)"
+                     onpaste="blockPasteSpaces(event)">
               <button class="btn btn-outline-secondary" type="button"
                       onclick="togglePass('createPassword', this)">
                 <i class="bi bi-eye"></i>
@@ -84,11 +84,10 @@
             </div>
           </div>
 
-          {{-- Role --}}
           <div class="mb-4">
             <label class="form-label fw-bold">Role</label>
             <select name="role" class="form-select">
-              <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>User</option>
+              <option value="user"  {{ old('role') == 'user'  ? 'selected' : '' }}>User</option>
               <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
             </select>
           </div>
@@ -107,6 +106,24 @@
 </div>
 
 <script>
+  function blockSpaces(event) {
+    if (event.key === ' ' || event.code === 'Space') {
+      event.preventDefault();
+    }
+  }
+
+  function blockPasteSpaces(event) {
+    const pasted = (event.clipboardData || window.clipboardData).getData('text');
+    if (pasted.includes(' ')) {
+      event.preventDefault();
+      const input = event.target;
+      const clean = pasted.replace(/\s/g, '');
+      const start = input.selectionStart;
+      const end   = input.selectionEnd;
+      input.value = input.value.substring(0, start) + clean + input.value.substring(end);
+    }
+  }
+
   function togglePass(id, btn) {
     const input = document.getElementById(id);
     const icon  = btn.querySelector('i');
